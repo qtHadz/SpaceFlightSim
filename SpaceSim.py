@@ -104,17 +104,28 @@ class PhysicsEntity(Entity):
         super().__init__(name, color, pos)
         self.vel = vel
         self.mass = mass
-    def run(self):
+    def precalc(self,others):
+        for ent in others:
+            self.calcForce
+    def applycalc(self):
         self.updatePos()
         self.draw()
     def updatePos(self):
         self.pos += self.vel*deltaTime
+    def calcAcc(self,force):
+        self.preAcc = force/self.mass
+    def calcVel(self):
+        self.preVel += self.preAcc * deltaTime
     def applyForce(self,force):
         acc = force/self.mass
         self.vel += acc*deltaTime
+    def forceDueToGravity(self,other):
+        dist = self.distanceTo(other)
+        mag = (self.mass*other.mass*G_CONSTANT)/(dist*dist)
+        return self.directionTo(other)*mag
+        
 
-
-class pCirce(PhysicsEntity):
+class PhysicsCircle(PhysicsEntity):
     def __init__(self, name, color, pos, vel, mass, radius):
         super().__init__(name, color, pos, vel, mass)
         self.radius = radius
@@ -131,6 +142,10 @@ ORIGIN = Vector2(0,0)
 OFFSET = Vector2(0,0)
 SCALE = 1
 
+# Maths constants
+G_CONSTANT = 6.67 * pow(10,-11)
+
+# Colours
 BLACK = (0,0,0)
 WHITE = (255,255,255)
 RED = (255,0,0)
@@ -146,7 +161,7 @@ def start(dim):
 
 def main():
     global SCREEN, OFFSET, SCALE
-    t = pCirce(1,WHITE,Vector2(0,0),Vector2(5,0),10,10)
+    t = PhysicsCircle(1,WHITE,Vector2(0,0),Vector2(5,0),10,10)
     while True:
         SCREEN.fill(BLACK)
 
@@ -160,8 +175,6 @@ def main():
             if event.type == pygame.MOUSEWHEEL:
                 m = -(event.y/10) + 1
                 SCALE *= m
-        
-        t.run()
 
         pygame.display.flip()
         Inputs.refresh()
